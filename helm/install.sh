@@ -1,0 +1,2 @@
+helm template airflow apache-airflow/airflow --create-namespace --namespace airflow --values ./values.yaml --values ./override-values.yaml --output-dir ./generated_yamls
+helm install airflow apache-airflow/airflow --create-namespace --namespace airflow --values ./values.yaml --values ./override-values.yaml
