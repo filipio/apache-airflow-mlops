@@ -332,7 +332,7 @@ def cleanup():
             os.remove(filepath)
 
 with DAG(
-    dag_id="main_dag",
+    dag_id="ml_pipeline",
     start_date=datetime.datetime(2021, 1, 1),
     schedule_interval=None,
 ):
@@ -356,7 +356,7 @@ with DAG(
     save_task >> cleanup_task
 
 with DAG(
-    dag_id="main_dag_no_cleanup",
+    dag_id="ml_pipeline_no_cleanup",
     start_date=datetime.datetime(2021, 1, 1),
     schedule_interval=None,
 ):
@@ -377,7 +377,7 @@ with DAG(
     train_task3 >> evaluate_task3 >> [ log_task, save_task ]
 
 with DAG(
-    dag_id="cleanup_only",
+    dag_id="cleanup",
     start_date=datetime.datetime(2021, 1, 1),
     schedule_interval=None,
 ):

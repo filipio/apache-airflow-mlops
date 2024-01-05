@@ -1,3 +1,7 @@
+# TODO: Do not change this file directly, this is just a reference.
+# TODO: Use common-override-values.yaml or override-values.yaml (in executors directories) instead
+# TODO: Order of config files applied is: values.yaml -> common-override-values.yaml -> override-values.yaml
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -488,7 +492,7 @@ kerberos:
 
 # Airflow Worker Config
 workers:
-  # Number of airflow celery workers in StatefulSet
+  # Number of airflow celery_executor workers in StatefulSet
   replicas: 1
   # Max number of old replicasets to retain
   revisionHistoryLimit: ~

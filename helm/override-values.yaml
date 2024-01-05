@@ -1,9 +1,0 @@
-#secret:
-#  - envName: "AIRFLOW_CONN_MY_AWS_CONNECTION"
-#    secretName: "my-aws-connection"
-#    secretKey: "AIRFLOW_CONN_MY_AWS_CONNECTION"
-
-images:
-  airflow:
-    repository: "my-dags"
-    tag: "0.0.1"
