@@ -1,10 +1,15 @@
 # contains values that are common for both executors
 
 # secret my-aws-connection must be created before installing airflow
-#secret:
-#  - envName: "AIRFLOW_CONN_MY_AWS_CONNECTION"
-#    secretName: "my-aws-connection"
-#    secretKey: "AIRFLOW_CONN_MY_AWS_CONNECTION"
+secret:
+  - envName: "AIRFLOW_CONN_MY_AWS_CONNECTION"
+    secretName: "my-aws-connection"
+    secretKey: "AIRFLOW_CONN_MY_AWS_CONNECTION"
+
+images:
+  airflow:
+    repository: "my-dags"
+    tag: "0.0.1"
 
 # pvc my-existing-pvc must be created before installing airflow
 volumes:

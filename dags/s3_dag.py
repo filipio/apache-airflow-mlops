@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 from airflow.operators.python import PythonOperator
 from airflow.hooks.S3_hook import S3Hook
 
-AWS_S3_CONN_ID = "my_aws_connection" # name of connection, the same as in aws_conn_uri_printer.py and the secret
+# TODO: sth is wrong with token in connection, currently below dag is not working
+AWS_S3_CONN_ID = "my_aws_connection" # name of connection, the same as in setup.py and the secret
 
 
 def list_keys():
