@@ -119,6 +119,8 @@ def evaluate_model_1():
     with open('/mnt/shared/knn_eval.csv', 'w') as eval_file:
         eval_file.write(f'{accuracy_test}')
 
+    return accuracy_test
+
 @task(task_id="evaluate_model_2")
 def evaluate_model_2():
     # TODO implement
