@@ -14,6 +14,7 @@ from airflow.decorators import task
 @task(task_id="download_the_data")
 def download_data_task():
     # TODO implement
+    # Expected result: the file /mnt/shared/yelp_academic_dataset_business.json exists
     time.sleep(3)
     
 
