@@ -1,12 +1,14 @@
 import datetime
 import time
 import os
+import pickle
 
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
 
 from airflow import DAG
-from airflow.operators.empty import EmptyOperator
 from airflow.decorators import task
 
 @task(task_id="download_the_data")
@@ -63,12 +65,31 @@ def prepare_data_task():
     mapper = {1.0:1,1.5:2, 2.0:2, 2.5:3, 3.0:3, 3.5:4, 4.0:4, 4.5:5, 5.0:5}
     df_final['stars'] = df_final['stars'].map(mapper)
 
-    df_final.to_csv(path_or_buf='/mnt/shared/data_clean.csv')
+    df_final.to_csv('/mnt/shared/data_clean.csv')
+
+    # split for knn
+    X = df_final.iloc[:,:-2]
+    y = df_final['stars']
+    X_train_knn, X_test_knn, y_train_knn, y_test_knn = train_test_split(X, y, test_size=0.2, random_state=1)
+    X_train_knn.to_csv('/mnt/shared/data_X_train.csv')
+    X_test_knn.to_csv('/mnt/shared/data_X_test.csv')
+    y_train_knn.to_csv('/mnt/shared/data_y_train.csv')
+    y_test_knn.to_csv('/mnt/shared/data_y_test.csv')
 
 @task(task_id="train_model_1")
 def train_model_one():
-    # TODO implement
-    time.sleep(3)
+    # read and split data
+    X_train_knn = pd.read_csv('/mnt/shared/data_X_train.csv')
+    y_train_knn = pd.read_csv('/mnt/shared/data_y_train.csv')
+
+    # train KNN
+    knn = KNeighborsClassifier(n_neighbors=20)
+    knn.fit(X_train_knn, y_train_knn)
+
+    # save model
+    with open('/mnt/shared/knn.pkl', 'wb') as knn_file:
+        pickle.dump(knn, knn_file)  
+
 
 @task(task_id="train_model_2")
 def train_model_two():
@@ -80,24 +101,49 @@ def train_model_three():
     # TODO implement
     time.sleep(3)
 
-@task(task_id="evaluate_model")
-def evaluate_model(model):
+@task(task_id="evaluate_model_1")
+def evaluate_model_1():
+    # load knn
+    knn: KNeighborsClassifier = pickle.load(open('/mnt/shared/knn.pkl', 'rb'))
+    X_test_knn = pd.read_csv('/mnt/shared/data_X_test.csv')
+    y_test_knn = pd.read_csv('/mnt/shared/data_y_test.csv')
+
+    # evaluate
+    # accuracy_train = knn.score(X_train_knn, y_train_knn) # unused
+    accuracy_test = knn.score(X_test_knn, y_test_knn)
+
+    # save results
+    with open('/mnt/shared/knn_eval.csv') as eval_file:
+        eval_file.write(f'{accuracy_test}')
+
+@task(task_id="evaluate_model_2")
+def evaluate_model_2():
+    # TODO implement
+    time.sleep(3)
+
+@task(task_id="evaluate_model_3")
+def evaluate_model_3():
     # TODO implement
     time.sleep(3)
 
 @task(task_id="log_result")
 def log_result():
-    # TODO implement
+    # TODO implement (make a nice log file and upload it to S3)
     time.sleep(3)
 
 @task(task_id="save_result")
 def save_result():
-    # TODO implement
+    # TODO implement (choose best model based on eval files and upload it to the cloud)
+    # Eval files:
+    # - /mnt/shared/knn_eval.csv contains a single float with the model's accracy
+    # - TODO svm
+    # - TODO neural network
+
     time.sleep(3)
 
 @task(task_id="cleanup")
 def cleanup():
-    # current implementation wipes the whole persistant volume, except the yelp data
+    # current implementation wipes the whole persistant volume, except for the yelp data
     for subdir, dirs, files in os.walk('/mnt/shared'):
         for file in files:
             # don't remove the raw data
@@ -133,9 +179,9 @@ with DAG(
     train_task1 = train_model_one()
     train_task2 = train_model_two()
     train_task3 = train_model_three()
-    evaluate_task1 = evaluate_model(1)
-    evaluate_task2 = evaluate_model(1)
-    evaluate_task3 = evaluate_model(1)
+    evaluate_task1 = evaluate_model_1()
+    evaluate_task2 = evaluate_model_2()
+    evaluate_task3 = evaluate_model_3()
     log_task = log_result()
     save_task = save_result()
     cleanup_task = cleanup()
@@ -157,9 +203,9 @@ with DAG(
     train_task1 = train_model_one()
     train_task2 = train_model_two()
     train_task3 = train_model_three()
-    evaluate_task1 = evaluate_model(1)
-    evaluate_task2 = evaluate_model(1)
-    evaluate_task3 = evaluate_model(1)
+    evaluate_task1 = evaluate_model_1()
+    evaluate_task2 = evaluate_model_2()
+    evaluate_task3 = evaluate_model_3()
     log_task = log_result()
     save_task = save_result()
  
