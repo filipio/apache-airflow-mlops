@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.multioutput import MultiOutputClassifier
 
 from airflow import DAG
 from airflow.decorators import task
@@ -84,7 +85,8 @@ def train_model_one():
     y_train_knn = pd.read_csv('/mnt/shared/data_y_train.csv')
 
     # train KNN
-    knn = KNeighborsClassifier(n_neighbors=20)
+    # CUSTOM CHANGE - wrapped with MultiOutputClassifier
+    knn = MultiOutputClassifier(KNeighborsClassifier(n_neighbors=20), n_jobs=-1)
     knn.fit(X_train_knn, y_train_knn)
 
     # save model
@@ -105,7 +107,7 @@ def train_model_three():
 @task(task_id="evaluate_model_1")
 def evaluate_model_1():
     # load knn
-    knn: KNeighborsClassifier = pickle.load(open('/mnt/shared/knn.pkl', 'rb'))
+    knn: MultiOutputClassifier = pickle.load(open('/mnt/shared/knn.pkl', 'rb'))
     X_test_knn = pd.read_csv('/mnt/shared/data_X_test.csv')
     y_test_knn = pd.read_csv('/mnt/shared/data_y_test.csv')
 
