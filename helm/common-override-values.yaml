@@ -19,7 +19,7 @@ volumes:
 # VolumeMounts for all airflow containers
 volumeMounts:
 - name: my-volume
-  mountPath: "/usr/local/tmp"
+  mountPath: "/mnt/shared"
 
 workers:
   # Number of airflow celery_executor workers in StatefulSet

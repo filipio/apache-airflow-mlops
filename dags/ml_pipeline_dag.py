@@ -261,34 +261,16 @@ Number,Digimon,Stage,Type,Attribute,Memory,Equip Slots,Lv 50 HP,Lv50 SP,Lv50 Atk
 249,Rosemon BM,Mega,Data,Plant,20,2,1480,143,149,139,159,143
 '''
 
-# TODO try:  executor_config={"KubernetesExecutor": {
-                            #       "image": "airflow:runner2",
-                            #       "volume_mounts": [
-                            #           {
-                            #               "name": "airflow-dags",
-                            #               "mountPath": "/usr/local/airflow/libs",
-                            #               "subPath": "airflow/development/libs"
-                            #           },
-                            #           {
-                            #               "name": "airflow-dags",
-                            #               "mountPath": "/usr/local/airflow/plugins",
-                            #               "subPath": "airflow/development/plugins"
-                            #           }],
-                            #       }
-                            #  },
-# inside the @task decorator
-
-
 @task(task_id="download_the_data")
 def download_data_task():
     # TODO this is using hardcoded-data instead of a download
-    with open('/usr/local/tmp/data.csv', 'w') as f:
+    with open('/mnt/shared/data.csv', 'w') as f:
         f.write(sample_data)
 
 @task(task_id="clean_and_split_the_data")
 def prepare_data_task():
     # TODO dummy imeplemntation
-    with open('/usr/local/tmp/data.csv', 'r') as raw_data, open('/usr/local/tmp/train_data.csv', 'w') as train_data, open('/usr/local/tmp/test_data.csv', 'w') as test_data:
+    with open('/mnt/shared/data.csv', 'r') as raw_data, open('/mnt/shared/train_data.csv', 'w') as train_data, open('/mnt/shared/test_data.csv', 'w') as test_data:
         raw_data_content = raw_data.read()
         train_data.write(raw_data_content)
         test_data.write(raw_data_content)
@@ -326,7 +308,7 @@ def save_result():
 @task(task_id="cleanup")
 def cleanup():
     # current implementation wipes the whole persistant volume
-    for subdir, dirs, files in os.walk('/usr/local/tmp'):
+    for subdir, dirs, files in os.walk('/mnt/shared'):
         for file in files:
             filepath = subdir + os.sep + file
             os.remove(filepath)

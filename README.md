@@ -26,6 +26,15 @@ Do this if there is a new config or docker image has changed
 python3 upgrade.py
 ```
 
+## (Optional) Kubernetes Dashboard UI
+
+```bash
+kubectl apply -f ./k8s_resources/unlocked_dashboard.yaml
+kubectl proxy
+```
+
+The dashboard is available at `http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/`, skip the login if prompted.
+
 ## Clean up
 Run below command to delete kind cluster and k8s resources:
 ```bash
