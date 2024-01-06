@@ -97,11 +97,13 @@ def save_result():
 
 @task(task_id="cleanup")
 def cleanup():
-    # current implementation wipes the whole persistant volume
+    # current implementation wipes the whole persistant volume, except the yelp data
     for subdir, dirs, files in os.walk('/mnt/shared'):
         for file in files:
-            filepath = subdir + os.sep + file
-            os.remove(filepath)
+            # don't remove the raw data
+            if not (file.startswith('yelp' and file.endswith('.json'))):
+                filepath = subdir + os.sep + file
+                os.remove(filepath)
 
 # The "attributes" column in the yelp data has nested attributes. 
 # In order to create a feature table, we need to separate those nested attributes into their own columns. 
