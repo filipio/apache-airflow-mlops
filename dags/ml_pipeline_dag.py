@@ -116,7 +116,7 @@ def evaluate_model_1():
     accuracy_test = knn.score(X_test_knn, y_test_knn)
 
     # save results
-    with open('/mnt/shared/knn_eval.csv') as eval_file:
+    with open('/mnt/shared/knn_eval.csv', 'w') as eval_file:
         eval_file.write(f'{accuracy_test}')
 
 @task(task_id="evaluate_model_2")
