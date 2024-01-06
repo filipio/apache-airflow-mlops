@@ -1,3 +1,3 @@
 FROM apache/airflow
-RUN pip install --no-cache-dir apache-airflow-providers-amazon
-# add needed dependencies here
+COPY requirements.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt

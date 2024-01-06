@@ -21,10 +21,6 @@ volumeMounts:
 - name: my-volume
   mountPath: "/mnt/shared"
 
-workers:
-  # Number of airflow celery_executor workers in StatefulSet
-  replicas: 1
-
 dags:
   persistence:
     enabled: false
