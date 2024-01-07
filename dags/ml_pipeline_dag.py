@@ -21,17 +21,13 @@ def download_data_task():
 
 @task(task_id="clean_and_prepare_the_data")
 def prepare_data_task():
+    # Preprocessing the businesses
+
     businesses = pd.read_json("/mnt/shared/yelp_academic_dataset_business.json", lines=True, orient='columns', chunksize=1000000)
     # The data is huge, this takes only a subset
     for business in businesses:
         subset_business = business
         break
-
-    # This is seemingly unused in the orgiginal notebook
-    # reviews = pd.read_json("/mnt/shared/yelp_academic_dataset_review.json", lines=True, orient='columns', chunksize=1000000)
-    # for review in reviews:
-    #     subset_review = review
-    #     break
 
     # From the subset we only take restaurants in Toronto
     # Businesses in Toronto and currently open business
@@ -70,19 +66,38 @@ def prepare_data_task():
     df_final.to_csv('/mnt/shared/data_clean.csv')
 
     # split for knn
-    X = df_final.iloc[:,:-2]
-    y = df_final['stars']
-    X_train_knn, X_test_knn, y_train_knn, y_test_knn = train_test_split(X, y, test_size=0.2, random_state=1)
-    X_train_knn.to_csv('/mnt/shared/data_X_train.csv')
-    X_test_knn.to_csv('/mnt/shared/data_X_test.csv')
-    y_train_knn.to_csv('/mnt/shared/data_y_train.csv')
-    y_test_knn.to_csv('/mnt/shared/data_y_test.csv')
+    X_knn = df_final.iloc[:,:-2]
+    y_knn = df_final['stars']
+    X_train_knn, X_test_knn, y_train_knn, y_test_knn = train_test_split(X_knn, y_knn, test_size=0.2, random_state=1)
+    X_train_knn.to_csv('/mnt/shared/data_X_train_knn.csv')
+    X_test_knn.to_csv('/mnt/shared/data_X_test_knn.csv')
+    y_train_knn.to_csv('/mnt/shared/data_y_train_knn.csv')
+    y_test_knn.to_csv('/mnt/shared/data_y_test_knn.csv')
+
+    # Preprocessing the reviews
+
+    reviews = pd.read_json("/mnt/shared/yelp_academic_dataset_review.json", lines=True, orient='columns', chunksize=1000000)
+    for review in reviews:
+        subset_review = review
+        break
+
+    # pull out needed columns from subset_review table
+    df_review = subset_review[['user_id','business_id','stars', 'date']]
+    # pull out names and addresses of the restaurants from rest table
+    restaurant = rest[['business_id', 'name', 'address']]
+    # combine df_review and restaurant table
+    combined_business_data = pd.merge(df_review, restaurant, on='business_id')
+    # create a user-item matrix
+    rating_crosstab = combined_business_data.pivot_table(values='stars', index='user_id', columns='name', fill_value=0)
+    # Transpose the Utility matrix
+    X_svd = rating_crosstab.values.T
+    X_svd.to_csv('/mnt/shared/data_X_train_svd.csv')
 
 @task(task_id="train_model_1")
 def train_model_one():
     # read and split data
-    X_train_knn = pd.read_csv('/mnt/shared/data_X_train.csv')
-    y_train_knn = pd.read_csv('/mnt/shared/data_y_train.csv')
+    X_train_knn = pd.read_csv('/mnt/shared/data_X_train_knn.csv')
+    y_train_knn = pd.read_csv('/mnt/shared/data_y_train_knn.csv')
 
     # train KNN
     # CUSTOM CHANGE - wrapped with MultiOutputClassifier
@@ -108,8 +123,8 @@ def train_model_three():
 def evaluate_model_1():
     # load knn
     knn: MultiOutputClassifier = pickle.load(open('/mnt/shared/knn.pkl', 'rb'))
-    X_test_knn = pd.read_csv('/mnt/shared/data_X_test.csv')
-    y_test_knn = pd.read_csv('/mnt/shared/data_y_test.csv')
+    X_test_knn = pd.read_csv('/mnt/shared/data_X_test_knn.csv')
+    y_test_knn = pd.read_csv('/mnt/shared/data_y_test_knn.csv')
 
     # evaluate
     # accuracy_train = knn.score(X_train_knn, y_train_knn) # unused
