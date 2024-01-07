@@ -23,7 +23,7 @@ def download_data_task():
 def prepare_data_task():
     # Preprocessing the businesses
 
-    businesses = pd.read_json("/mnt/shared/yelp_academic_dataset_business.json", lines=True, orient='columns', chunksize=1000000, encoding='utf8', errors='ignore')
+    businesses = pd.read_json("/mnt/shared/yelp_academic_dataset_business.json", lines=True, orient='columns', chunksize=1000000, encoding='utf8', encoding_errors='ignore')
     # The data is huge, this takes only a subset
     for business in businesses:
         subset_business = business
@@ -76,7 +76,7 @@ def prepare_data_task():
 
     # Preprocessing the reviews
 
-    reviews = pd.read_json("/mnt/shared/yelp_academic_dataset_review.json", lines=True, orient='columns', chunksize=1000000, encoding='utf8', errors='ignore')
+    reviews = pd.read_json("/mnt/shared/yelp_academic_dataset_review.json", lines=True, orient='columns', chunksize=1000000, encoding='utf8', encoding_errors='ignore')
     for review in reviews:
         subset_review = review
         break
