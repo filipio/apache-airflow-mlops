@@ -37,92 +37,96 @@ def download_data_task():
 
 @task(task_id="clean_and_prepare_the_data")
 def prepare_data_task():
-    # Preprocessing the businesses
+    time.sleep(3)
+    # TODO remove old dataset code
+    # # Preprocessing the businesses
 
-    businesses = pd.read_json("/mnt/shared/yelp_academic_dataset_business.json", lines=True, orient='columns', chunksize=1000000, encoding='utf8', encoding_errors='ignore')
-    # The data is huge, this takes only a subset
-    for business in businesses:
-        subset_business = business
-        break
+    # businesses = pd.read_json("/mnt/shared/yelp_academic_dataset_business.json", lines=True, orient='columns', chunksize=1000000, encoding='utf8', encoding_errors='ignore')
+    # # The data is huge, this takes only a subset
+    # for business in businesses:
+    #     subset_business = business
+    #     break
 
-    # From the subset we only take restaurants in Toronto
-    # Businesses in Toronto and currently open business
-    city = subset_business[(subset_business['city'] == 'Toronto') & (subset_business['is_open'] == 1)]
-    toronto = city[['business_id','name','address', 'categories', 'attributes','stars']]
-    # From the buisinesses we only take restaurants
-    rest = toronto[toronto['categories'].str.contains('Restaurant.*')==True].reset_index()
+    # # From the subset we only take restaurants in Toronto
+    # # Businesses in Toronto and currently open business
+    # city = subset_business[(subset_business['city'] == 'Toronto') & (subset_business['is_open'] == 1)]
+    # toronto = city[['business_id','name','address', 'categories', 'attributes','stars']]
+    # # From the buisinesses we only take restaurants
+    # rest = toronto[toronto['categories'].str.contains('Restaurant.*')==True].reset_index()
 
-    # Update the restaurants frame to unpack the nested 'attributes' column fields
-    rest['BusinessParking'] = rest.apply(lambda x: str_to_dict(extract_keys(x['attributes'], 'BusinessParking')), axis=1)
-    rest['Ambience'] = rest.apply(lambda x: str_to_dict(extract_keys(x['attributes'], 'Ambience')), axis=1)
-    rest['GoodForMeal'] = rest.apply(lambda x: str_to_dict(extract_keys(x['attributes'], 'GoodForMeal')), axis=1)
-    rest['Dietary'] = rest.apply(lambda x: str_to_dict(extract_keys(x['attributes'], 'Dietary')), axis=1)
-    rest['Music'] = rest.apply(lambda x: str_to_dict(extract_keys(x['attributes'], 'Music')), axis=1)
+    # # Update the restaurants frame to unpack the nested 'attributes' column fields
+    # rest['BusinessParking'] = rest.apply(lambda x: str_to_dict(extract_keys(x['attributes'], 'BusinessParking')), axis=1)
+    # rest['Ambience'] = rest.apply(lambda x: str_to_dict(extract_keys(x['attributes'], 'Ambience')), axis=1)
+    # rest['GoodForMeal'] = rest.apply(lambda x: str_to_dict(extract_keys(x['attributes'], 'GoodForMeal')), axis=1)
+    # rest['Dietary'] = rest.apply(lambda x: str_to_dict(extract_keys(x['attributes'], 'Dietary')), axis=1)
+    # rest['Music'] = rest.apply(lambda x: str_to_dict(extract_keys(x['attributes'], 'Music')), axis=1)
 
-    # create table with attribute dummies
-    df_attr = pd.concat([ rest['attributes'].apply(pd.Series), rest['BusinessParking'].apply(pd.Series),
-                        rest['Ambience'].apply(pd.Series), rest['GoodForMeal'].apply(pd.Series), 
-                        rest['Dietary'].apply(pd.Series) ], axis=1)
-    df_attr_dummies = pd.get_dummies(df_attr)
-    # get dummies from categories
-    df_categories_dummies = pd.Series(rest['categories']).str.get_dummies(',')
-    df_categories_dummies
+    # # create table with attribute dummies
+    # df_attr = pd.concat([ rest['attributes'].apply(pd.Series), rest['BusinessParking'].apply(pd.Series),
+    #                     rest['Ambience'].apply(pd.Series), rest['GoodForMeal'].apply(pd.Series), 
+    #                     rest['Dietary'].apply(pd.Series) ], axis=1)
+    # df_attr_dummies = pd.get_dummies(df_attr)
+    # # get dummies from categories
+    # df_categories_dummies = pd.Series(rest['categories']).str.get_dummies(',')
+    # df_categories_dummies
 
-    # pull out names and stars from rest table 
-    result = rest[['name','stars']]
+    # # pull out names and stars from rest table 
+    # result = rest[['name','stars']]
 
-    # Concat all tables and drop Restaurant column
-    df_final = pd.concat([df_attr_dummies, df_categories_dummies, result], axis=1)
-    df_final.drop('Restaurants',inplace=True,axis=1)
+    # # Concat all tables and drop Restaurant column
+    # df_final = pd.concat([df_attr_dummies, df_categories_dummies, result], axis=1)
+    # df_final.drop('Restaurants',inplace=True,axis=1)
 
-    # map floating point stars to an integer
-    mapper = {1.0:1,1.5:2, 2.0:2, 2.5:3, 3.0:3, 3.5:4, 4.0:4, 4.5:5, 5.0:5}
-    df_final['stars'] = df_final['stars'].map(mapper)
+    # # map floating point stars to an integer
+    # mapper = {1.0:1,1.5:2, 2.0:2, 2.5:3, 3.0:3, 3.5:4, 4.0:4, 4.5:5, 5.0:5}
+    # df_final['stars'] = df_final['stars'].map(mapper)
 
-    df_final.to_csv('/mnt/shared/data_clean.csv')
+    # df_final.to_csv('/mnt/shared/data_clean.csv')
 
-    # split for knn
-    X_knn = df_final.iloc[:,:-2]
-    y_knn = df_final['stars']
-    X_train_knn, X_test_knn, y_train_knn, y_test_knn = train_test_split(X_knn, y_knn, test_size=0.2, random_state=1)
-    X_train_knn.to_csv('/mnt/shared/data_X_train_knn.csv')
-    X_test_knn.to_csv('/mnt/shared/data_X_test_knn.csv')
-    y_train_knn.to_csv('/mnt/shared/data_y_train_knn.csv')
-    y_test_knn.to_csv('/mnt/shared/data_y_test_knn.csv')
+    # # split for knn
+    # X_knn = df_final.iloc[:,:-2]
+    # y_knn = df_final['stars']
+    # X_train_knn, X_test_knn, y_train_knn, y_test_knn = train_test_split(X_knn, y_knn, test_size=0.2, random_state=1)
+    # X_train_knn.to_csv('/mnt/shared/data_X_train_knn.csv')
+    # X_test_knn.to_csv('/mnt/shared/data_X_test_knn.csv')
+    # y_train_knn.to_csv('/mnt/shared/data_y_train_knn.csv')
+    # y_test_knn.to_csv('/mnt/shared/data_y_test_knn.csv')
 
-    # Preprocessing the reviews
+    # # Preprocessing the reviews
 
-    reviews = pd.read_json("/mnt/shared/yelp_academic_dataset_review.json", lines=True, orient='columns', chunksize=1000000, encoding='utf8', encoding_errors='ignore')
-    for review in reviews:
-        subset_review = review
-        break
+    # reviews = pd.read_json("/mnt/shared/yelp_academic_dataset_review.json", lines=True, orient='columns', chunksize=1000000, encoding='utf8', encoding_errors='ignore')
+    # for review in reviews:
+    #     subset_review = review
+    #     break
 
-    # pull out needed columns from subset_review table
-    df_review = subset_review[['user_id','business_id','stars', 'date']]
-    # pull out names and addresses of the restaurants from rest table
-    restaurant = rest[['business_id', 'name', 'address']]
-    # combine df_review and restaurant table
-    combined_business_data = pd.merge(df_review, restaurant, on='business_id')
-    # create a user-item matrix
-    rating_crosstab = combined_business_data.pivot_table(values='stars', index='user_id', columns='name', fill_value=0)
-    # Transpose the Utility matrix
-    X_svd = rating_crosstab.values.T
-    X_svd.to_csv('/mnt/shared/data_X_train_svd.csv')
+    # # pull out needed columns from subset_review table
+    # df_review = subset_review[['user_id','business_id','stars', 'date']]
+    # # pull out names and addresses of the restaurants from rest table
+    # restaurant = rest[['business_id', 'name', 'address']]
+    # # combine df_review and restaurant table
+    # combined_business_data = pd.merge(df_review, restaurant, on='business_id')
+    # # create a user-item matrix
+    # rating_crosstab = combined_business_data.pivot_table(values='stars', index='user_id', columns='name', fill_value=0)
+    # # Transpose the Utility matrix
+    # X_svd = rating_crosstab.values.T
+    # X_svd.to_csv('/mnt/shared/data_X_train_svd.csv')
 
 @task(task_id="train_model_1")
 def train_model_one():
-    # read and split data
-    X_train_knn = pd.read_csv('/mnt/shared/data_X_train_knn.csv')
-    y_train_knn = pd.read_csv('/mnt/shared/data_y_train_knn.csv')
+    time.sleep(3)
+    # TODO remove old dataser model
+    # # read and split data
+    # X_train_knn = pd.read_csv('/mnt/shared/data_X_train_knn.csv')
+    # y_train_knn = pd.read_csv('/mnt/shared/data_y_train_knn.csv')
 
-    # train KNN
-    # CUSTOM CHANGE - wrapped with MultiOutputClassifier
-    knn = MultiOutputClassifier(KNeighborsClassifier(n_neighbors=20), n_jobs=-1)
-    knn.fit(X_train_knn, y_train_knn)
+    # # train KNN
+    # # CUSTOM CHANGE - wrapped with MultiOutputClassifier
+    # knn = MultiOutputClassifier(KNeighborsClassifier(n_neighbors=20), n_jobs=-1)
+    # knn.fit(X_train_knn, y_train_knn)
 
-    # save model
-    with open('/mnt/shared/knn.pkl', 'wb') as knn_file:
-        pickle.dump(knn, knn_file)  
+    # # save model
+    # with open('/mnt/shared/knn.pkl', 'wb') as knn_file:
+    #     pickle.dump(knn, knn_file)  
 
 
 @task(task_id="train_model_2")
@@ -137,20 +141,20 @@ def train_model_three():
 
 @task(task_id="evaluate_model_1")
 def evaluate_model_1():
-    # load knn
-    knn: MultiOutputClassifier = pickle.load(open('/mnt/shared/knn.pkl', 'rb'))
-    X_test_knn = pd.read_csv('/mnt/shared/data_X_test_knn.csv')
-    y_test_knn = pd.read_csv('/mnt/shared/data_y_test_knn.csv')
+    time.sleep(3)
+    # TODO remove old model
+    # # load knn
+    # knn: MultiOutputClassifier = pickle.load(open('/mnt/shared/knn.pkl', 'rb'))
+    # X_test_knn = pd.read_csv('/mnt/shared/data_X_test_knn.csv')
+    # y_test_knn = pd.read_csv('/mnt/shared/data_y_test_knn.csv')
 
-    # evaluate
-    # accuracy_train = knn.score(X_train_knn, y_train_knn) # unused
-    accuracy_test = knn.score(X_test_knn, y_test_knn)
+    # # evaluate
+    # # accuracy_train = knn.score(X_train_knn, y_train_knn) # unused
+    # accuracy_test = knn.score(X_test_knn, y_test_knn)
 
-    # save results
-    with open('/mnt/shared/knn_eval.csv', 'w') as eval_file:
-        eval_file.write(f'{accuracy_test}')
-
-    return accuracy_test
+    # # save results
+    # with open('/mnt/shared/knn_eval.csv', 'w') as eval_file:
+    #     eval_file.write(f'{accuracy_test}')
 
 @task(task_id="evaluate_model_2")
 def evaluate_model_2():
