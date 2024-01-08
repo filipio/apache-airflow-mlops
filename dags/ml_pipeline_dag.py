@@ -3,6 +3,7 @@ import time
 import os
 import pickle
 
+import boto3
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -12,11 +13,26 @@ from sklearn.multioutput import MultiOutputClassifier
 from airflow import DAG
 from airflow.decorators import task
 
+BUCKET_NAME = 'azdzpiechaczek'
+DATA_FILE_NAME = 'athena/Unsaved/2023/11/13/0633d6c1-17a8-426d-8d71-9d19a9d5ced9.txt' # TODO change this to how the file will be called in S3
+
+session = boto3.Session(
+    aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+    aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
+    aws_session_token=os.environ['AWS_SESSION_TOKEN'],
+)
+
+s3 = session.resource('s3')
+bucket = s3.Bucket(BUCKET_NAME)
+
 @task(task_id="download_the_data")
 def download_data_task():
-    # TODO implement
-    # Expected result: the file /mnt/shared/yelp_academic_dataset_business.json exists
-    time.sleep(3)
+    data_str = ''
+    for fileobj in bucket.objects.filter(Prefix=DATA_FILE_NAME):
+        data_str = fileobj.get()['Body'].read().decode('utf-8')
+
+    with open(f'/mnt/shared/data.csv', 'w') as f:
+        f.write(data_str)
     
 
 @task(task_id="clean_and_prepare_the_data")
@@ -148,8 +164,10 @@ def evaluate_model_3():
 
 @task(task_id="log_result")
 def log_result():
-    # TODO implement (make a nice log file and upload it to S3)
-    time.sleep(3)
+    with open('/mnt/shared/logfile.txt', 'w') as f:
+        f.write('This is a mock log file') # TODO implement (make a nice log file and upload it to S3)
+
+    upload_to_s3('logfile.txt')
 
 @task(task_id="save_result")
 def save_result():
@@ -188,6 +206,10 @@ def str_to_dict(attr):
         return ast.literal_eval(attr)
     else:
         return ast.literal_eval("{}")    
+
+def upload_to_s3(filename):
+    s3.meta.client.upload_file(f'/mnt/shared/{filename}', BUCKET_NAME, filename)
+
 
 with DAG(
     dag_id="ml_pipeline",
