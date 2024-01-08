@@ -11,6 +11,9 @@ secret:
   - envName: "AWS_SECRET_ACCESS_KEY"
     secretName: "my-aws-connection"
     secretKey: "AWS_SECRET_ACCESS_KEY"
+  - envName: "AWS_SESSION_TOKEN"
+    secretName: "my-aws-connection"
+    secretKey: "AWS_SESSION_TOKEN"
 
 images:
   airflow:
