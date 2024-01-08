@@ -5,6 +5,12 @@ secret:
   - envName: "AIRFLOW_CONN_MY_AWS_CONNECTION"
     secretName: "my-aws-connection"
     secretKey: "AIRFLOW_CONN_MY_AWS_CONNECTION"
+  - envName: "AWS_ACCESS_KEY_ID"
+    secretName: "my-aws-connection"
+    secretKey: "AWS_ACCESS_KEY_ID"
+  - envName: "AWS_SECRET_ACCESS_KEY"
+    secretName: "my-aws-connection"
+    secretKey: "AWS_SECRET_ACCESS_KEY"
 
 images:
   airflow:

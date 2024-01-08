@@ -1,4 +1,4 @@
 numpy
 pandas
 scikit-learn
-apache-airflow-providers-amazon
+boto3

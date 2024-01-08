@@ -1,30 +1,36 @@
-import logging
+import os
 from airflow import DAG
-from datetime import datetime, timedelta
-from airflow.operators.python import PythonOperator
-from airflow.hooks.S3_hook import S3Hook
+from airflow.decorators import task
+from datetime import datetime
+import boto3
 
-# TODO: sth is wrong with token in connection, currently below dag is not working
-AWS_S3_CONN_ID = "my_aws_connection" # name of connection, the same as in setup.py and the secret
+BUCKET_NAME = 'azdzpiechaczek'
+DATA_FILE_NAME = 'athena/Unsaved/2023/11/13/0633d6c1-17a8-426d-8d71-9d19a9d5ced9.txt' # TODO change this to how the file will be called in S3
 
+@task(task_id="download_data_from_s3")
+def download_data():
+    session = boto3.Session(
+        aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+        aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
+        aws_session_token=os.environ['AWS_SESSION_TOKEN'],
+    )
 
-def list_keys():
-    print(AWS_S3_CONN_ID)
-    hook = S3Hook(aws_conn_id=AWS_S3_CONN_ID)
-    bucket = "awesome-airflow-bucket"
-    prefix = ""
-    logging.info(f"Listing Keys from {bucket}/{prefix}")
-    keys = hook.list_keys(bucket, prefix=prefix)
-    for key in keys:
-        logging.info(f"- s3://{bucket}/{key}")
+    s3 = session.resource('s3')
+    bucket = s3.Bucket(BUCKET_NAME)
+
+    data_str = ''
+    for fileobj in bucket.objects.filter(Prefix=DATA_FILE_NAME):
+        data_str = fileobj.get()['Body'].read().decode('utf-8')
+
+    with open(f'/mnt/shared/data.csv', 'w') as f:
+        f.write(data_str)
 
 
 with DAG(
         dag_id="s3_extract",
         start_date=datetime(2023, 12, 11),
-        schedule_interval=timedelta(days=1),
+        schedule_interval=None,
         catchup=False,
 ) as dag:
-    t1 = PythonOperator(task_id="s3_list_keys", python_callable=list_keys)
-
-    t1
+    download_task = download_data()
+    download_task

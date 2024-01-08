@@ -1,5 +1,4 @@
 import configparser
-import base64
 import os
 
 AWS_CONNECTION_ID = "my_aws_connection"  # use this in airflow files, see s3_dag.py
@@ -27,17 +26,9 @@ aws_access_key_id = config.get('default', 'aws_access_key_id')
 aws_secret_access_key = config.get('default', 'aws_secret_access_key')
 aws_session_token = config.get('default', 'aws_session_token')
 
-env_key = f"AIRFLOW_CONN_{AWS_CONNECTION_ID.upper()}"
-conn_uri = f"aws://{aws_access_key_id}:{aws_secret_access_key}@/?aws_session_token={aws_session_token}"
-
-print("env_key")
-print(env_key)
-print("conn_uri")
-print(conn_uri)
-
 secret_name = AWS_CONNECTION_ID.replace("_", "-")
 print(f"creating kubernetes secret {secret_name}")
-command = f"kubectl create secret generic {secret_name} --from-literal={env_key}={conn_uri} --namespace airflow"
+command = f"kubectl create secret generic {secret_name} --from-literal=AWS_ACCESS_KEY_ID={aws_access_key_id} --from-literal=AWS_SECRET_ACCESS_KEY={aws_secret_access_key} --from-literal=AWS_SESSION_TOKEN={aws_session_token} --namespace airflow"
 os.system(command)
 
 print(f"creating kubernetes pvc")
