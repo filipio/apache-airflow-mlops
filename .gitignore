@@ -3,3 +3,4 @@ generated_yamls
 .idea
 dataset
 secrets
+my-env
