@@ -24,7 +24,7 @@ from airflow.operators.python import get_current_context
 
 
 # aws constants - change this if needed
-BUCKET_NAME = "awesome-airflow-bucket"
+BUCKET_NAME = "awesome-airflow-bucket2"
 CATEGORY = "AOMIC_mini"  # AOMIC_copy = large, AOMIC = medium, AOMIC_mini = small
 
 
