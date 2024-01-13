@@ -291,13 +291,14 @@ def evaluate_model_3():
 
 @task(task_id="log_result")
 def log_result():
-    time.sleep(3)
-    # with open("/mnt/shared/logfile.txt", "w") as f:
-    #     f.write(
-    #         "This is a mock log file"
-    #     )  # TODO implement (make a nice log file and upload it to S3)
-
-    # upload_to_s3("logfile.txt")
+    with open("/mnt/shared/logfile.txt", "w") as f_dest:
+        for filename in os.listdir(DATASET_DIR):
+            file_path = os.path.join(DATASET_DIR, filename)
+            if file_path.endswith("_accuracy.json"):
+                with open(file_path) as f_src:
+                    f_dest.write(f"File {file_path}:\n") 
+                    f_dest.write(f"{f_src.read()}\n") 
+    upload_to_s3("logfile.txt")
 
 
 @task(task_id="upload_best_model_to_s3")
