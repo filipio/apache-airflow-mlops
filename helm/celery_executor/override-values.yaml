@@ -2,4 +2,4 @@ executor: "CeleryExecutor"
 
 workers:
   # Number of airflow celery_executor workers in StatefulSet
-  replicas: 1
+  replicas: 3
