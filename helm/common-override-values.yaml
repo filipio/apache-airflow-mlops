@@ -19,13 +19,13 @@ images:
 
 # pvc my-existing-pvc must be created before installing airflow
 volumes:
-- name: my-volume
-  persistentVolumeClaim:
-    claimName: my-existing-pvc
+  - name: my-volume
+    persistentVolumeClaim:
+      claimName: my-existing-pvc
 # VolumeMounts for all airflow containers
 volumeMounts:
-- name: my-volume
-  mountPath: "/mnt/shared"
+  - name: my-volume
+    mountPath: "/mnt/shared"
 
 dags:
   persistence:
@@ -39,3 +39,7 @@ dags:
     depth: 1
     maxFailures: 0
     subPath: "dags"
+
+config:
+  api:
+    auth_backends: "airflow.api.auth.backend.basic_auth"

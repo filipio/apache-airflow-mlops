@@ -61,22 +61,11 @@ def model_name():
     return task_id().split("_")[1]
 
 
-# TODO: there are a lot of prints in this file, but for now it's ok (it's useful for debugging what was wrong in the airflow logs)
-
-
 def create_dataset():
-    print("files at dataset dir")
-    print(os.listdir(DATASET_DIR))
     zip_file_path = f"{DATASET_DIR}/data.zip"
     if not os.path.exists(EXTRACTED_ZIP_DIR):
-        print("Extracting dataset...")
         with zipfile.ZipFile(zip_file_path, "r") as zip_ref:
             zip_ref.extractall(DATASET_DIR)
-
-        print("Extracted dataset")
-
-    print("files at dataset dir")
-    print(os.listdir(DATASET_DIR))
 
     dataset = []
     labels = []
@@ -101,9 +90,6 @@ def create_dataset():
         label_key = file_name_parts[1]
         labels.append(LABELS_DICT[label_key])
 
-    print("lengths of dataset and labels")
-    print(len(dataset))
-    print(len(labels))
     # make all elements of the dataset the same length (some time series are longer than others)
     shortest_data_len = min([len(item) for item in dataset])
     dataset = [item[:shortest_data_len] for item in dataset]
@@ -146,29 +132,16 @@ def calculate_features(df):
 def evaluate_model():
     # load model
     classifier = lgb.Booster(model_file=f"{DATASET_DIR}/{model_name()}.txt")
-    print("classifier loaded")
 
     # load test data
     test_features = pd.read_csv(f"{DATASET_DIR}/test_features.csv")
     y_test = pd.read_csv(f"{DATASET_DIR}/y_test.csv").to_numpy()
 
-    print("test features : ")
-    print(test_features.head())
-    print("y_test : ")
-    print(y_test)
-
     # make predictions
-    print("making predictions...")
     y_pred = classifier.predict(test_features)
     y_pred = np.argmax(y_pred, axis=1)
-    print("predictions made")
-    print("y_pred :")
-    print(y_pred)
 
-    print("calculating accuracy...")
     accuracy = accuracy_score(y_test, y_pred, normalize=True)
-    print("LightGBM Model accuracy score: {0:0.2f}".format(accuracy))
-
     accuracy_dict = {"accuracy": accuracy}
     # save as json
     with open(f"{DATASET_DIR}/{model_name()}_accuracy.json", "w") as f:
@@ -177,32 +150,19 @@ def evaluate_model():
 
 @task(task_id="download_the_data")
 def download_data_task():
-    print(os.environ["AWS_ACCESS_KEY_ID"])
-    print(os.environ["AWS_SECRET_ACCESS_KEY"])
-    print(os.environ["AWS_SESSION_TOKEN"])
-
     s3.download_file(BUCKET_NAME, DATA_FILE_NAME, f"{DATASET_DIR}/data.zip")
 
 
 @task(task_id="clean_and_prepare_the_data")
 def prepare_data_task():
     dataset, labels = create_dataset()
-    print("shape of dataset")
-    print(dataset.shape)
-
     x_train, x_test, y_train, y_test = split(dataset, labels)
-    print("shape of x_train")
-    print(x_train.shape)
 
     df_train = create_dataframe(x_train)
     df_test = create_dataframe(x_test)
-    print("shape of df_train")
-    print(df_train.shape)
 
     train_features = calculate_features(df_train)
     test_features = calculate_features(df_test)
-    print("shape of train_features")
-    print(train_features.shape)
 
     # needed to make lightgbm work
     train_features.columns = [i for i in range(train_features.shape[1])]
@@ -211,66 +171,42 @@ def prepare_data_task():
     # save data without index
     train_features.to_csv(f"{DATASET_DIR}/train_features.csv", index=False)
     test_features.to_csv(f"{DATASET_DIR}/test_features.csv", index=False)
-    print("saved train_features.csv and test_features.csv")
 
     # save labels
     pd.DataFrame(y_train).to_csv(f"{DATASET_DIR}/y_train.csv", index=False)
     pd.DataFrame(y_test).to_csv(f"{DATASET_DIR}/y_test.csv", index=False)
-    print("saved y_train.csv and y_test.csv")
 
 
 @task(task_id="train_model-1")
 def train_model_one():
     # read data
     train_features = pd.read_csv(f"{DATASET_DIR}/train_features.csv")
-    print("train features : ")
-    print(train_features.head())
 
     y_train = pd.read_csv(f"{DATASET_DIR}/y_train.csv")
-    print("y_train : ")
-    print(y_train.head())
-
-    print("training model...")
     classifier = lgb.LGBMClassifier(num_leaves=31)
     classifier.fit(train_features, y_train)
-
-    print("saving model...")
     classifier.booster_.save_model(f"{DATASET_DIR}/{model_name()}.txt")
 
 
 @task(task_id="train_model-2")
 def train_model_two():
     train_features = pd.read_csv(f"{DATASET_DIR}/train_features.csv")
-    print("train features : ")
-    print(train_features.head())
-
     y_train = pd.read_csv(f"{DATASET_DIR}/y_train.csv")
-    print("y_train : ")
-    print(y_train.head())
 
-    print("training model...")
     classifier = lgb.LGBMClassifier(num_leaves=32)
     classifier.fit(train_features, y_train)
 
-    print("saving model...")
     classifier.booster_.save_model(f"{DATASET_DIR}/{model_name()}.txt")
 
 
 @task(task_id="train_model-3")
 def train_model_three():
     train_features = pd.read_csv(f"{DATASET_DIR}/train_features.csv")
-    print("train features : ")
-    print(train_features.head())
-
     y_train = pd.read_csv(f"{DATASET_DIR}/y_train.csv")
-    print("y_train : ")
-    print(y_train.head())
 
-    print("training model...")
     classifier = lgb.LGBMClassifier(num_leaves=33)
     classifier.fit(train_features, y_train)
 
-    print("saving model...")
     classifier.booster_.save_model(f"{DATASET_DIR}/{model_name()}.txt")
 
 
@@ -296,8 +232,8 @@ def log_result():
             file_path = os.path.join(DATASET_DIR, filename)
             if file_path.endswith("_accuracy.json"):
                 with open(file_path) as f_src:
-                    f_dest.write(f"File {file_path}:\n") 
-                    f_dest.write(f"{f_src.read()}\n") 
+                    f_dest.write(f"File {file_path}:\n")
+                    f_dest.write(f"{f_src.read()}\n")
     upload_to_s3("logfile.txt")
 
 
@@ -307,8 +243,6 @@ def save_result():
     accuracy_files.sort()
     file_names = [i.split("/")[-1] for i in accuracy_files]
 
-    print("accuracy_files")
-    print(accuracy_files)
     best_acc = -1
     best_model_name = None
     for i in range(len(accuracy_files)):
@@ -317,12 +251,10 @@ def save_result():
             accuracy_dict = json.load(f)
             model_name = file_names[i].split("_")[0]
             accuracy = accuracy_dict["accuracy"]
-            print(f"accuracy for model {model_name} : {accuracy}")
             if accuracy > best_acc:
                 best_acc = accuracy
                 best_model_name = model_name
 
-    print(f"best model name : {best_model_name}")
     upload_to_s3(f"{best_model_name}.txt")
 
 
